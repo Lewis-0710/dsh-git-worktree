@@ -17,14 +17,14 @@
   display: inline-flex;
   align-items: stretch;
   height: 28px;
-  border-radius: 6px;
+  min-height: 28px;
+  border-radius: 16px;
   background: transparent;
-  color: var(--dsw-alias-label-secondary, #81858c);
+  color: var(--dsw-alias-label-primary, #1d1e20);
   font-size: 13px;
   line-height: 20px;
   font-weight: 500;
-  min-height: 28px;
-  overflow: hidden;
+  vertical-align: middle;
 }
 
 .chip {
@@ -32,9 +32,10 @@
   align-items: center;
   gap: 4px;
   height: 100%;
-  padding: 0 8px 0 8px;
+  min-height: 28px;
+  padding: 0 8px;
   border: none;
-  border-radius: 0;
+  border-radius: 16px;
   background: transparent;
   color: inherit;
   font: inherit;
@@ -42,10 +43,17 @@
   line-height: 20px;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-.chip:hover {
+.chip:hover,
+.chip[aria-expanded="true"] {
   background: var(--dsw-alias-interactive-bg-hover, color-mix(in srgb, currentColor 8%, transparent));
+}
+
+.branchIcon {
+  color: var(--dsw-alias-label-primary, inherit);
+  flex: none;
 }
 
 .branch {
@@ -53,6 +61,16 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.chevron {
+  color: var(--dsw-alias-label-tertiary, #999da3);
+  flex: none;
+  transition: transform 120ms ease;
+}
+
+.chip[aria-expanded="true"] .chevron {
+  transform: rotate(180deg);
 }
 
 /* Confirm flyout: the second-level panel opening right of the branch

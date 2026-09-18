@@ -59,7 +59,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Button, IconBranchOutline16, Toast,
+  Button, IconBranchOutline16, IconChevronDownOutline14, Toast,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: merges SessionStandardProps / GlobalStandardProps (`sessionId`,
@@ -284,9 +284,9 @@ function ChipConfirm({
   const popRef = useRef<HTMLDivElement>(null)
   const confirmRef = useRef<HTMLButtonElement | null>(null)
   const draftInputRef = useRef<HTMLInputElement | null>(null)
-  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null)
+  const [pos, setPos] = useState<{ left: number; bottom?: number; top?: number } | null>(null)
 
-  // Bottom-pin above the chip and clamp horizontally against the measured,
+  // Bottom-pin above the chip or top-pin below the chip and clamp horizontally against the measured,
   // content-driven width (popCard is max-content under an 80vw cap).
   useLayoutEffect(() => {
     const place = (): void => {
@@ -297,7 +297,13 @@ function ChipConfirm({
       const vw = window.innerWidth
       const vh = window.innerHeight
       const left = Math.min(Math.max(rect.left, POP_MARGIN), Math.max(POP_MARGIN, vw - POP_MARGIN - pop.offsetWidth))
-      setPos({ left, bottom: vh - rect.top + POP_GAP })
+      const spaceAbove = rect.top - POP_MARGIN
+      const spaceBelow = vh - rect.bottom - POP_MARGIN
+      if (spaceAbove < 200 && spaceBelow > spaceAbove) {
+        setPos({ left, top: rect.bottom + POP_GAP })
+      } else {
+        setPos({ left, bottom: vh - rect.top + POP_GAP })
+      }
     }
     place()
     window.addEventListener('resize', place)
@@ -383,8 +389,30 @@ function ChipConfirm({
   )
 }
 
+function findHostElement(scope?: HTMLElement | null): HTMLElement | null {
+  if (typeof document === 'undefined') return null
+  const doc = scope?.ownerDocument ?? document
+  return doc.querySelector<HTMLElement>('[data-slot="conversation.hero.agentPreset"]')
+    ?? doc.querySelector<HTMLElement>('[data-slot="conversation.session.header.actions"]')
+}
+
 /** The tool-row entry registered into conversation.input.left. */
 export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktree, pruneWorktrees, t }: BranchChipDockProps) {
+  const [portalHost, setPortalHost] = useState<HTMLElement | null>(() => findHostElement())
+
+  useLayoutEffect(() => {
+    const updateHost = (): void => {
+      const next = findHostElement()
+      setPortalHost(current => (current === next ? current : next))
+    }
+    updateHost()
+    const observer = new MutationObserver(updateHost)
+    observer.observe(document.body, { childList: true, subtree: true })
+    return () => {
+      observer.disconnect()
+    }
+  }, [])
+
   const summary = useSessions(state => state.byId[sessionId])
   const session = useSession(s => s)
   const cwd = summary?.cwd
@@ -730,27 +758,32 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
 
   return (
     <>
-      <span className={css.dock}>
-        <button
-          ref={chipRef}
-          type="button"
-          className={css.chip}
-          title={facts.currentBranch}
-          onClick={() => {
-            // Toggling always unwinds any half-open confirm first.
-            setConfirm(null)
-            const opening = !menuOpen
-            setMenuOpen(opening)
-            // Fresh rows at decision time: branches may have moved outside
-            // (terminal, other tools) since the last fetch. Non-blocking —
-            // the menu opens on current data and re-renders when it lands.
-            if (opening && !busyRef.current) void refresh()
-          }}
-        >
-          <IconBranchOutline16 size={12} />
-          <span className={css.branch}>{displayBranch(facts.currentBranch)}</span>
-        </button>
-      </span>
+      {portalHost !== null && createPortal(
+        <span className={css.dock}>
+          <button
+            ref={chipRef}
+            type="button"
+            className={css.chip}
+            aria-expanded={menuOpen}
+            title={facts.currentBranch}
+            onClick={() => {
+              // Toggling always unwinds any half-open confirm first.
+              setConfirm(null)
+              const opening = !menuOpen
+              setMenuOpen(opening)
+              // Fresh rows at decision time: branches may have moved outside
+              // (terminal, other tools) since the last fetch. Non-blocking —
+              // the menu opens on current data and re-renders when it lands.
+              if (opening && !busyRef.current) void refresh()
+            }}
+          >
+            <IconBranchOutline16 size={12} className={css.branchIcon} />
+            <span className={css.branch}>{displayBranch(facts.currentBranch)}</span>
+            <IconChevronDownOutline14 size={12} className={css.chevron} />
+          </button>
+        </span>,
+        portalHost,
+      )}
       <BranchMenu
         open={menuOpen}
         anchorRef={chipRef}

@@ -360,6 +360,7 @@ export async function handleCreateWorktree(deps: RouteDeps, body: unknown): Prom
         }
       }
     }
+    const mkdirRecursive = deps.mkdirRecursive ?? fsMkdirRecursive
     if (cutout === true) {
       // An explicit name skips the `-wt` suffix walk and is used verbatim —
       // both for the branch and the storage folder. A leading dash would
@@ -369,7 +370,7 @@ export async function handleCreateWorktree(deps: RouteDeps, body: unknown): Prom
       if (custom !== undefined && custom !== '') {
         if (custom.startsWith('-')) return fail(400, '"name" must not start with "-"')
         const target = join(rootDir, `${facts.repoName}-${sanitizeBranchDir(custom)}`)
-        await mkdir(rootDir, { recursive: true })
+        await mkdirRecursive(rootDir)
         await addWorktreeCutout(deps.exec, facts.repoRoot, branch, custom, target)
         return { status: 200, body: { path: target, created: true, ...fetchWarning === undefined ? {} : { fetchWarning } } }
       }
@@ -384,7 +385,7 @@ export async function handleCreateWorktree(deps: RouteDeps, body: unknown): Prom
         dirExists(join(rootDir, `${facts.repoName}-${sanitizeBranchDir(candidate)}`)),
       )
       const target = join(rootDir, `${facts.repoName}-${sanitizeBranchDir(newBranch)}`)
-      await mkdir(rootDir, { recursive: true })
+      await mkdirRecursive(rootDir)
       await addWorktreeCutout(deps.exec, facts.repoRoot, branch, newBranch, target)
       return { status: 200, body: { path: target, created: true, ...fetchWarning === undefined ? {} : { fetchWarning } } }
     }
@@ -392,7 +393,7 @@ export async function handleCreateWorktree(deps: RouteDeps, body: unknown): Prom
     // the sidebar group title (the folder basename) then reads as the parent
     // repository plus the branch instead of a bare branch word.
     const target = join(rootDir, `${facts.repoName}-${sanitizeBranchDir(branch)}`)
-    await mkdir(rootDir, { recursive: true })
+    await mkdirRecursive(rootDir)
     const result = await addWorktree(deps.exec, facts.repoRoot, branch, target, deps.dirExists)
     return { status: 200, body: { ...result, ...fetchWarning === undefined ? {} : { fetchWarning } } }
   } catch (error) {

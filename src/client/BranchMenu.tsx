@@ -441,11 +441,8 @@ export function BranchMenu({
   const flyInputRef = useRef<HTMLInputElement | null>(null)
   /** The row whose pick is awaiting confirmation (anchoring element). */
   const pendingRef = useRef<{ name: string; el: HTMLElement } | null>(null)
-  /** Pending row's name — the placement-effect trigger: picking another
-   * row while the flyout is open must re-anchor it (confirmOpen alone
-   * stays true, so a ref mutation re-renders nothing). */
   const [pendingName, setPendingName] = useState<string | null>(null)
-  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null)
+  const [pos, setPos] = useState<{ left: number; bottom?: number; top?: number; maxHeight?: number } | null>(null)
   const [query, setQuery] = useState('')
   /** Expanded folder set, keyed by group-prefixed node path (see groupKey).
    * Re-seeded on every open so the current branch's chain is visible
@@ -694,8 +691,14 @@ export function BranchMenu({
       const rect = anchor.getBoundingClientRect()
       const vw = window.innerWidth
       const vh = window.innerHeight
+      const spaceAbove = rect.top - MARGIN
+      const spaceBelow = vh - rect.bottom - MARGIN
       const left = Math.min(Math.max(rect.left, MARGIN), Math.max(MARGIN, vw - CARD_WIDTH - MARGIN))
-      setPos({ left, bottom: vh - rect.top + GAP })
+      if (spaceAbove < 320 && spaceBelow > spaceAbove) {
+        setPos({ left, top: rect.bottom + GAP, maxHeight: Math.min(420, spaceBelow - GAP) })
+      } else {
+        setPos({ left, bottom: vh - rect.top + GAP, maxHeight: Math.min(420, spaceAbove - GAP) })
+      }
     }
     place()
     window.addEventListener('resize', place)
@@ -1553,7 +1556,11 @@ export function BranchMenu({
         <div
           ref={cardRef}
           className={css.menuCard}
-          style={{ left: pos.left, bottom: pos.bottom }}
+          style={{
+            left: pos.left,
+            ...(pos.top !== undefined ? { top: pos.top, bottom: 'auto' } : { bottom: pos.bottom }),
+            ...(pos.maxHeight !== undefined ? { maxHeight: pos.maxHeight } : {}),
+          }}
           role="menu"
           aria-label={t('menuBranches')}
         >
