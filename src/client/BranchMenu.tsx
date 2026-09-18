@@ -275,8 +275,8 @@ function FetchGlyph({ size = 16, dashed = true }: { size?: number; dashed?: bool
 
 /** Viewport edge clearance, mirroring the base Menu portal margin. */
 const MARGIN = 12
-/** Gap kept between the chip's top edge and the card's bottom edge. */
-const GAP = 6
+/** Gap kept between the chip's bottom edge and the card's top edge (base Menu posture). */
+const GAP = 4
 /** Design card width — the CSS width's px arm; used for horizontal clamping. */
 const CARD_WIDTH = 360
 /** Design flyout width cap — matches .popCard's max-width arm. */
@@ -442,7 +442,7 @@ export function BranchMenu({
   /** The row whose pick is awaiting confirmation (anchoring element). */
   const pendingRef = useRef<{ name: string; el: HTMLElement } | null>(null)
   const [pendingName, setPendingName] = useState<string | null>(null)
-  const [pos, setPos] = useState<{ left: number; bottom?: number; top?: number; maxHeight?: number } | null>(null)
+  const [pos, setPos] = useState<{ left: number; top: number; maxHeight: number } | null>(null)
   const [query, setQuery] = useState('')
   /** Expanded folder set, keyed by group-prefixed node path (see groupKey).
    * Re-seeded on every open so the current branch's chain is visible
@@ -675,10 +675,8 @@ export function BranchMenu({
     })
   }
 
-  // Pin above the chip on open and on viewport movement while open. CSS
-  // `bottom` pinning means the card grows upward from that edge without
-  // measuring its own height; the width is fixed by CSS, so the horizontal
-  // clamp is deterministic.
+  // Pin below the chip (matching WorkspacePickFlow and AgentPresetSeat Menu posture)
+  // and clamp horizontally against the measured width.
   useLayoutEffect(() => {
     if (!open) {
       setPos(null)
@@ -691,14 +689,10 @@ export function BranchMenu({
       const rect = anchor.getBoundingClientRect()
       const vw = window.innerWidth
       const vh = window.innerHeight
-      const spaceAbove = rect.top - MARGIN
-      const spaceBelow = vh - rect.bottom - MARGIN
       const left = Math.min(Math.max(rect.left, MARGIN), Math.max(MARGIN, vw - CARD_WIDTH - MARGIN))
-      if (spaceAbove < 320 && spaceBelow > spaceAbove) {
-        setPos({ left, top: rect.bottom + GAP, maxHeight: Math.min(420, spaceBelow - GAP) })
-      } else {
-        setPos({ left, bottom: vh - rect.top + GAP, maxHeight: Math.min(420, spaceAbove - GAP) })
-      }
+      const top = rect.bottom + GAP
+      const maxHeight = Math.max(160, Math.min(480, vh - top - MARGIN))
+      setPos({ left, top, maxHeight })
     }
     place()
     window.addEventListener('resize', place)
@@ -1558,8 +1552,8 @@ export function BranchMenu({
           className={css.menuCard}
           style={{
             left: pos.left,
-            ...(pos.top !== undefined ? { top: pos.top, bottom: 'auto' } : { bottom: pos.bottom }),
-            ...(pos.maxHeight !== undefined ? { maxHeight: pos.maxHeight } : {}),
+            top: pos.top,
+            maxHeight: pos.maxHeight,
           }}
           role="menu"
           aria-label={t('menuBranches')}
