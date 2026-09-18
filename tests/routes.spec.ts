@@ -69,6 +69,7 @@ function deps(over: Partial<RouteDeps> = {}): RouteDeps {
     home: () => '/home/u',
     envHome: () => undefined,
     dirExists: () => true,
+    mkdirRecursive: async () => {},
     ...over,
   }
 }
