@@ -66,11 +66,6 @@
 .chevron {
   color: var(--dsw-alias-label-tertiary, #999da3);
   flex: none;
-  transition: transform 120ms ease;
-}
-
-.chip[aria-expanded="true"] .chevron {
-  transform: rotate(180deg);
 }
 
 /* Confirm flyout: the second-level panel opening right of the branch

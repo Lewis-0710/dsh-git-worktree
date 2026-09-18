@@ -1240,7 +1240,7 @@ index 0000000..5ed0b5a
 +allowBuilds:
 +  esbuild: true
 diff --git a/src/client/BranchChip.module.css b/src/client/BranchChip.module.css
-index 98dca58..20cb865 100644
+index 98dca58..b0a9084 100644
 --- a/src/client/BranchChip.module.css
 +++ b/src/client/BranchChip.module.css
 @@ -17,14 +17,14 @@
@@ -1296,25 +1296,20 @@ index 98dca58..20cb865 100644
  .branch {
    max-width: 16em;
    overflow: hidden;
-@@ -55,6 +63,16 @@
+@@ -55,6 +63,11 @@
    white-space: nowrap;
  }
  
 +.chevron {
 +  color: var(--dsw-alias-label-tertiary, #999da3);
 +  flex: none;
-+  transition: transform 120ms ease;
-+}
-+
-+.chip[aria-expanded="true"] .chevron {
-+  transform: rotate(180deg);
 +}
 +
  /* Confirm flyout: the second-level panel opening right of the branch
   * card (the base Menu's submenu posture: r20, elevation-prominent
   * hairline, --dsw-specific-menu — host 0.1.2 Menu card; hosts without
 diff --git a/src/client/BranchChip.tsx b/src/client/BranchChip.tsx
-index 367cb69..0524c5e 100644
+index 367cb69..8562ad6 100644
 --- a/src/client/BranchChip.tsx
 +++ b/src/client/BranchChip.tsx
 @@ -59,7 +59,7 @@
@@ -1326,34 +1321,45 @@ index 367cb69..0524c5e 100644
  } from '@deepseek-ai/dsh-client-ui-primitives'
  import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
  // Type-only: merges SessionStandardProps / GlobalStandardProps (`sessionId`,
-@@ -284,9 +284,9 @@ function ChipConfirm({
+@@ -132,10 +132,10 @@ const BRANCH_DISPLAY_MAX = 25
+ 
+ /** Viewport edge clearance and chip gap, mirroring BranchMenu's posture. */
+ const POP_MARGIN = 12
+-const POP_GAP = 6
++const POP_GAP = 4
+ /** Unplaced dialog: hidden but laid out at a fixed origin so offsetWidth is
+  * real for the measure-then-place pass (BranchMenu's flyout trick). */
+-const POP_MEASURE: CSSProperties = { left: '-9999px', bottom: '0px', visibility: 'hidden' }
++const POP_MEASURE: CSSProperties = { left: '-9999px', top: '0px', visibility: 'hidden' }
+ 
+ /**
+  * Clamp a branch name for chip display: names up to 25 chars pass through;
+@@ -284,10 +284,10 @@ function ChipConfirm({
    const popRef = useRef<HTMLDivElement>(null)
    const confirmRef = useRef<HTMLButtonElement | null>(null)
    const draftInputRef = useRef<HTMLInputElement | null>(null)
 -  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null)
-+  const [pos, setPos] = useState<{ left: number; bottom?: number; top?: number } | null>(null)
++  const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
  
 -  // Bottom-pin above the chip and clamp horizontally against the measured,
-+  // Bottom-pin above the chip or top-pin below the chip and clamp horizontally against the measured,
-   // content-driven width (popCard is max-content under an 80vw cap).
+-  // content-driven width (popCard is max-content under an 80vw cap).
++  // Pin below the chip (matching WorkspacePickFlow and AgentPresetSeat Menu posture)
++  // and clamp horizontally against the measured width.
    useLayoutEffect(() => {
      const place = (): void => {
-@@ -297,7 +297,13 @@ function ChipConfirm({
+       const anchor = anchorRef.current
+@@ -295,9 +295,8 @@ function ChipConfirm({
+       if (anchor === null || pop === null) return
+       const rect = anchor.getBoundingClientRect()
        const vw = window.innerWidth
-       const vh = window.innerHeight
+-      const vh = window.innerHeight
        const left = Math.min(Math.max(rect.left, POP_MARGIN), Math.max(POP_MARGIN, vw - POP_MARGIN - pop.offsetWidth))
 -      setPos({ left, bottom: vh - rect.top + POP_GAP })
-+      const spaceAbove = rect.top - POP_MARGIN
-+      const spaceBelow = vh - rect.bottom - POP_MARGIN
-+      if (spaceAbove < 200 && spaceBelow > spaceAbove) {
-+        setPos({ left, top: rect.bottom + POP_GAP })
-+      } else {
-+        setPos({ left, bottom: vh - rect.top + POP_GAP })
-+      }
++      setPos({ left, top: rect.bottom + POP_GAP })
      }
      place()
      window.addEventListener('resize', place)
-@@ -383,8 +389,30 @@ function ChipConfirm({
+@@ -383,8 +382,30 @@ function ChipConfirm({
    )
  }
  
@@ -1384,7 +1390,7 @@ index 367cb69..0524c5e 100644
    const summary = useSessions(state => state.byId[sessionId])
    const session = useSession(s => s)
    const cwd = summary?.cwd
-@@ -730,27 +758,32 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
+@@ -730,27 +751,32 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
  
    return (
      <>
@@ -1439,9 +1445,20 @@ index 367cb69..0524c5e 100644
          open={menuOpen}
          anchorRef={chipRef}
 diff --git a/src/client/BranchMenu.tsx b/src/client/BranchMenu.tsx
-index 7e851c9..ac413ad 100644
+index 7e851c9..638d2a6 100644
 --- a/src/client/BranchMenu.tsx
 +++ b/src/client/BranchMenu.tsx
+@@ -275,8 +275,8 @@ function FetchGlyph({ size = 16, dashed = true }: { size?: number; dashed?: bool
+ 
+ /** Viewport edge clearance, mirroring the base Menu portal margin. */
+ const MARGIN = 12
+-/** Gap kept between the chip's top edge and the card's bottom edge. */
+-const GAP = 6
++/** Gap kept between the chip's bottom edge and the card's top edge (base Menu posture). */
++const GAP = 4
+ /** Design card width — the CSS width's px arm; used for horizontal clamping. */
+ const CARD_WIDTH = 360
+ /** Design flyout width cap — matches .popCard's max-width arm. */
 @@ -441,11 +441,8 @@ export function BranchMenu({
    const flyInputRef = useRef<HTMLInputElement | null>(null)
    /** The row whose pick is awaiting confirmation (anchoring element). */
@@ -1451,35 +1468,43 @@ index 7e851c9..ac413ad 100644
 -   * stays true, so a ref mutation re-renders nothing). */
    const [pendingName, setPendingName] = useState<string | null>(null)
 -  const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null)
-+  const [pos, setPos] = useState<{ left: number; bottom?: number; top?: number; maxHeight?: number } | null>(null)
++  const [pos, setPos] = useState<{ left: number; top: number; maxHeight: number } | null>(null)
    const [query, setQuery] = useState('')
    /** Expanded folder set, keyed by group-prefixed node path (see groupKey).
     * Re-seeded on every open so the current branch's chain is visible
-@@ -694,8 +691,14 @@ export function BranchMenu({
-       const rect = anchor.getBoundingClientRect()
+@@ -678,10 +675,8 @@ export function BranchMenu({
+     })
+   }
+ 
+-  // Pin above the chip on open and on viewport movement while open. CSS
+-  // `bottom` pinning means the card grows upward from that edge without
+-  // measuring its own height; the width is fixed by CSS, so the horizontal
+-  // clamp is deterministic.
++  // Pin below the chip (matching WorkspacePickFlow and AgentPresetSeat Menu posture)
++  // and clamp horizontally against the measured width.
+   useLayoutEffect(() => {
+     if (!open) {
+       setPos(null)
+@@ -695,7 +690,9 @@ export function BranchMenu({
        const vw = window.innerWidth
        const vh = window.innerHeight
-+      const spaceAbove = rect.top - MARGIN
-+      const spaceBelow = vh - rect.bottom - MARGIN
        const left = Math.min(Math.max(rect.left, MARGIN), Math.max(MARGIN, vw - CARD_WIDTH - MARGIN))
 -      setPos({ left, bottom: vh - rect.top + GAP })
-+      if (spaceAbove < 320 && spaceBelow > spaceAbove) {
-+        setPos({ left, top: rect.bottom + GAP, maxHeight: Math.min(420, spaceBelow - GAP) })
-+      } else {
-+        setPos({ left, bottom: vh - rect.top + GAP, maxHeight: Math.min(420, spaceAbove - GAP) })
-+      }
++      const top = rect.bottom + GAP
++      const maxHeight = Math.max(160, Math.min(480, vh - top - MARGIN))
++      setPos({ left, top, maxHeight })
      }
      place()
      window.addEventListener('resize', place)
-@@ -1553,7 +1556,11 @@ export function BranchMenu({
+@@ -1553,7 +1550,11 @@ export function BranchMenu({
          <div
            ref={cardRef}
            className={css.menuCard}
 -          style={{ left: pos.left, bottom: pos.bottom }}
 +          style={{
 +            left: pos.left,
-+            ...(pos.top !== undefined ? { top: pos.top, bottom: 'auto' } : { bottom: pos.bottom }),
-+            ...(pos.maxHeight !== undefined ? { maxHeight: pos.maxHeight } : {}),
++            top: pos.top,
++            maxHeight: pos.maxHeight,
 +          }}
            role="menu"
            aria-label={t('menuBranches')}

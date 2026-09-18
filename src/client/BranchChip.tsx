@@ -132,10 +132,10 @@ const BRANCH_DISPLAY_MAX = 25
 
 /** Viewport edge clearance and chip gap, mirroring BranchMenu's posture. */
 const POP_MARGIN = 12
-const POP_GAP = 6
+const POP_GAP = 4
 /** Unplaced dialog: hidden but laid out at a fixed origin so offsetWidth is
  * real for the measure-then-place pass (BranchMenu's flyout trick). */
-const POP_MEASURE: CSSProperties = { left: '-9999px', bottom: '0px', visibility: 'hidden' }
+const POP_MEASURE: CSSProperties = { left: '-9999px', top: '0px', visibility: 'hidden' }
 
 /**
  * Clamp a branch name for chip display: names up to 25 chars pass through;
@@ -284,10 +284,10 @@ function ChipConfirm({
   const popRef = useRef<HTMLDivElement>(null)
   const confirmRef = useRef<HTMLButtonElement | null>(null)
   const draftInputRef = useRef<HTMLInputElement | null>(null)
-  const [pos, setPos] = useState<{ left: number; bottom?: number; top?: number } | null>(null)
+  const [pos, setPos] = useState<{ left: number; top: number } | null>(null)
 
-  // Bottom-pin above the chip or top-pin below the chip and clamp horizontally against the measured,
-  // content-driven width (popCard is max-content under an 80vw cap).
+  // Pin below the chip (matching WorkspacePickFlow and AgentPresetSeat Menu posture)
+  // and clamp horizontally against the measured width.
   useLayoutEffect(() => {
     const place = (): void => {
       const anchor = anchorRef.current
@@ -295,15 +295,8 @@ function ChipConfirm({
       if (anchor === null || pop === null) return
       const rect = anchor.getBoundingClientRect()
       const vw = window.innerWidth
-      const vh = window.innerHeight
       const left = Math.min(Math.max(rect.left, POP_MARGIN), Math.max(POP_MARGIN, vw - POP_MARGIN - pop.offsetWidth))
-      const spaceAbove = rect.top - POP_MARGIN
-      const spaceBelow = vh - rect.bottom - POP_MARGIN
-      if (spaceAbove < 200 && spaceBelow > spaceAbove) {
-        setPos({ left, top: rect.bottom + POP_GAP })
-      } else {
-        setPos({ left, bottom: vh - rect.top + POP_GAP })
-      }
+      setPos({ left, top: rect.bottom + POP_GAP })
     }
     place()
     window.addEventListener('resize', place)
