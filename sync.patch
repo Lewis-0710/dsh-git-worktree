@@ -1240,15 +1240,16 @@ index 0000000..5ed0b5a
 +allowBuilds:
 +  esbuild: true
 diff --git a/src/client/BranchChip.module.css b/src/client/BranchChip.module.css
-index 98dca58..b0a9084 100644
+index 98dca58..e1aa762 100644
 --- a/src/client/BranchChip.module.css
 +++ b/src/client/BranchChip.module.css
-@@ -17,14 +17,14 @@
+@@ -17,14 +17,15 @@
    display: inline-flex;
    align-items: stretch;
    height: 28px;
 -  border-radius: 6px;
 +  min-height: 28px;
++  margin-left: 2px;
 +  border-radius: 16px;
    background: transparent;
 -  color: var(--dsw-alias-label-secondary, #81858c);
@@ -1262,7 +1263,7 @@ index 98dca58..b0a9084 100644
  }
  
  .chip {
-@@ -32,9 +32,10 @@
+@@ -32,9 +33,10 @@
    align-items: center;
    gap: 4px;
    height: 100%;
@@ -1275,7 +1276,7 @@ index 98dca58..b0a9084 100644
    background: transparent;
    color: inherit;
    font: inherit;
-@@ -42,12 +43,19 @@
+@@ -42,12 +44,19 @@
    line-height: 20px;
    font-weight: 500;
    cursor: pointer;
@@ -1296,7 +1297,7 @@ index 98dca58..b0a9084 100644
  .branch {
    max-width: 16em;
    overflow: hidden;
-@@ -55,6 +63,11 @@
+@@ -55,6 +64,11 @@
    white-space: nowrap;
  }
  

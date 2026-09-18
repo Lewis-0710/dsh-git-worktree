@@ -18,6 +18,7 @@
   align-items: stretch;
   height: 28px;
   min-height: 28px;
+  margin-left: 2px;
   border-radius: 16px;
   background: transparent;
   color: var(--dsw-alias-label-primary, #1d1e20);
