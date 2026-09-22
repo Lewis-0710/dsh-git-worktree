@@ -1,3 +1,15 @@
+> [!NOTE]
+> **Fork Maintenance Branch** | This repository is a maintained fork of [LaoYueHanNi/dsh-git-worktree](https://github.com/LaoYueHanNi/dsh-git-worktree).
+> 
+> **Key Differences & Custom Enhancements**:
+> 1. **Hero Tool Row Entry**: Moved the branch chip entry from the bottom composer (`conversation.input.left`) to above the chat box, positioned right behind the Agent Preset switcher in the new session hero row (and into the header action bar for active sessions).
+> 2. **Downward Popup & Adaptive Height**: Branch menu (`BranchMenu`) and confirmation flyouts (`ChipConfirm`) open downwards below the chip (`top: rect.bottom + 4px`) with viewport-adaptive `maxHeight`, matching native DSH pickers.
+> 3. **Chevron Down Indicator**: Added static `IconChevronDownOutline14` dropdown indicator without rotation on expansion, aligned with native Agent Preset switcher styling.
+> 4. **Visual Style & Gap Tuning**: Adjusted chip styling (28px height, 16px radius) and added `margin-left: 2px` to perfectly match the gap between the workspace switcher and the agent preset.
+> 5. **Smart Sync & Patch Tracking**: Includes `sync.sh` (Patch-First, Smart-Merge strategy) and a clean `sync.patch` snapshot.
+> 
+> See [sync.patch](./sync.patch) for details.
+
 # dsh-git-worktree
 
 [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)

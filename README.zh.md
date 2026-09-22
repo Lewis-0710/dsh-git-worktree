@@ -1,3 +1,15 @@
+> [!NOTE]
+> **Fork 维护版本** | 本仓库是 [LaoYueHanNi/dsh-git-worktree](https://github.com/LaoYueHanNi/dsh-git-worktree) 的维护分支。
+> 
+> **与上游主要差异与定制增强**：
+> 1. **入口迁移至顶部工具行**：将原位于对话框底部输入栏（`conversation.input.left`）的分支入口迁移至对话框上方的新会话工具行（`heroWorkspaceRow`），紧随「Agent 预设切换入口」之后（并在会话详情中自动挂载至会话顶部动作栏）。
+> 2. **弹窗向下展开与视口自适应**：分支菜单（`BranchMenu`）与确认弹窗（`ChipConfirm`）统一对齐原生下拉交互，严格在按钮下方弹出（`top: rect.bottom + 4px`），并根据屏幕视口动态计算最大高度（`maxHeight`）。
+> 3. **下拉箭头交互对齐**：补充下拉 Chevron 箭头（`IconChevronDownOutline14`），展开菜单时保持静态不旋转，与 DSH 原生 Agent 预设组件视觉规范一致。
+> 4. **视觉样式与间距对齐**：入口按钮采用 28px 高度、16px 圆角胶囊风格，微调左间距（`margin-left: 2px`）对齐工作区到 Agent 预设的间距比例。
+> 5. **智能同步与补丁管理**：维护 `sync.sh` 双策略同步脚本与纯净的 `sync.patch`，支持平滑跟踪并合并上游最新功能。
+> 
+> 详见 [sync.patch](./sync.patch)。
+
 # dsh-git-worktree
 
 [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
