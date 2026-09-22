@@ -1,3 +1,43 @@
+diff --git a/README.md b/README.md
+index 3bcf177..49e44c6 100644
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,15 @@
++> [!NOTE]
++> **Fork Maintenance Branch** | This repository is a maintained fork of [LaoYueHanNi/dsh-git-worktree](https://github.com/LaoYueHanNi/dsh-git-worktree).
++> 
++> **Key Differences & Custom Enhancements**:
++> 1. **Hero Tool Row Entry**: Moved the branch chip entry from the bottom composer (`conversation.input.left`) to above the chat box, positioned right behind the Agent Preset switcher in the new session hero row (and into the header action bar for active sessions).
++> 2. **Downward Popup & Adaptive Height**: Branch menu (`BranchMenu`) and confirmation flyouts (`ChipConfirm`) open downwards below the chip (`top: rect.bottom + 4px`) with viewport-adaptive `maxHeight`, matching native DSH pickers.
++> 3. **Chevron Down Indicator**: Added static `IconChevronDownOutline14` dropdown indicator without rotation on expansion, aligned with native Agent Preset switcher styling.
++> 4. **Visual Style & Gap Tuning**: Adjusted chip styling (28px height, 16px radius) and added `margin-left: 2px` to perfectly match the gap between the workspace switcher and the agent preset.
++> 5. **Smart Sync & Patch Tracking**: Includes `sync.sh` (Patch-First, Smart-Merge strategy) and a clean `sync.patch` snapshot.
++> 
++> See [sync.patch](./sync.patch) for details.
++
+ # dsh-git-worktree
+ 
+ [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
+diff --git a/README.zh.md b/README.zh.md
+index 5638752..b1a4db9 100644
+--- a/README.zh.md
++++ b/README.zh.md
+@@ -1,3 +1,15 @@
++> [!NOTE]
++> **Fork 维护版本** | 本仓库是 [LaoYueHanNi/dsh-git-worktree](https://github.com/LaoYueHanNi/dsh-git-worktree) 的维护分支。
++> 
++> **与上游主要差异与定制增强**：
++> 1. **入口迁移至顶部工具行**：将原位于对话框底部输入栏（`conversation.input.left`）的分支入口迁移至对话框上方的新会话工具行（`heroWorkspaceRow`），紧随「Agent 预设切换入口」之后（并在会话详情中自动挂载至会话顶部动作栏）。
++> 2. **弹窗向下展开与视口自适应**：分支菜单（`BranchMenu`）与确认弹窗（`ChipConfirm`）统一对齐原生下拉交互，严格在按钮下方弹出（`top: rect.bottom + 4px`），并根据屏幕视口动态计算最大高度（`maxHeight`）。
++> 3. **下拉箭头交互对齐**：补充下拉 Chevron 箭头（`IconChevronDownOutline14`），展开菜单时保持静态不旋转，与 DSH 原生 Agent 预设组件视觉规范一致。
++> 4. **视觉样式与间距对齐**：入口按钮采用 28px 高度、16px 圆角胶囊风格，微调左间距（`margin-left: 2px`）对齐工作区到 Agent 预设的间距比例。
++> 5. **智能同步与补丁管理**：维护 `sync.sh` 双策略同步脚本与纯净的 `sync.patch`，支持平滑跟踪并合并上游最新功能。
++> 
++> 详见 [sync.patch](./sync.patch)。
++
+ # dsh-git-worktree
+ 
+ [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 diff --git a/pnpm-workspace.yaml b/pnpm-workspace.yaml
 index d76aa1e..3f83195 100644
 --- a/pnpm-workspace.yaml
