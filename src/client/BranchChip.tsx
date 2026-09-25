@@ -63,7 +63,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Button, IconBranchOutline16, IconChevronDownOutline14, Toast,
+  Button, IconBranchOutlineRegular, IconChevronDownOutlineRegular, Toast,
 } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: merges SessionStandardProps / GlobalStandardProps (`sessionId`,
@@ -181,11 +181,12 @@ function displayBranch(branch: string): string {
  * {@link buildLinkedWorktreeRows}), so nothing here ever has to express
  * "not usable in this directory".
  */
-function buildBranchRows(
+export function buildBranchRows(
   branches: readonly BranchEntry[],
   worktrees: readonly WorktreeEntry[],
 ): BranchRow[] {
   const held = new Set(worktrees.flatMap(w => w.main || w.branch === undefined ? [] : [w.branch]))
+  const localMap = new Map(branches.filter(b => b.kind === 'local').map(b => [b.name, b]))
   return [
     ...branches.filter(b => b.kind === 'local' && !held.has(b.name)).map(b => ({
       name: b.name,
@@ -197,9 +198,17 @@ function buildBranchRows(
       name: b.name,
       kind: 'remote' as const,
     })),
-    ...worktrees.flatMap(w => w.main || w.branch === undefined
-      ? []
-      : [{ name: w.branch, kind: 'worktree' as const, path: w.path }]),
+    ...worktrees.flatMap(w => {
+      if (w.main || w.branch === undefined) return []
+      const twin = localMap.get(w.branch)
+      return [{
+        name: w.branch,
+        kind: 'worktree' as const,
+        path: w.path,
+        ...twin?.ahead === undefined ? {} : { ahead: twin.ahead },
+        ...twin?.behind === undefined ? {} : { behind: twin.behind },
+      }]
+    }),
   ]
 }
 
@@ -227,12 +236,13 @@ function buildBranchRows(
  * identity is its branch, so those rows could only ever be offered as
  * refusals (see the component doc).
  */
-function buildLinkedWorktreeRows(
+export function buildLinkedWorktreeRows(
   branches: readonly BranchEntry[],
   worktrees: readonly WorktreeEntry[],
   currentBranch: string,
 ): BranchRow[] {
   const current = branches.find(b => b.kind === 'local' && b.name === currentBranch)
+  const localMap = new Map(branches.filter(b => b.kind === 'local').map(b => [b.name, b]))
   return [
     ...current === undefined
       ? []
@@ -246,9 +256,18 @@ function buildLinkedWorktreeRows(
     // Its row carries `mainWorktree` — the hop is legal, but git refuses
     // `worktree remove` on the main checkout, so the destructive menu verb
     // gates off this flag.
-    ...worktrees.flatMap(w => w.branch === undefined || w.branch === currentBranch
-      ? []
-      : [{ name: w.branch, kind: 'worktree' as const, path: w.path, ...(w.main ? { mainWorktree: true } : {}) }]),
+    ...worktrees.flatMap(w => {
+      if (w.branch === undefined || w.branch === currentBranch) return []
+      const twin = localMap.get(w.branch)
+      return [{
+        name: w.branch,
+        kind: 'worktree' as const,
+        path: w.path,
+        ...(w.main ? { mainWorktree: true } : {}),
+        ...twin?.ahead === undefined ? {} : { ahead: twin.ahead },
+        ...twin?.behind === undefined ? {} : { behind: twin.behind },
+      }]
+    }),
   ]
 }
 
@@ -869,9 +888,9 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
               if (opening && !busyRef.current) void refresh()
             }}
           >
-            <IconBranchOutline16 size={12} className={css.branchIcon} />
+            <IconBranchOutlineRegular size={12} className={css.branchIcon} />
             <span className={css.branch}>{displayBranch(facts.currentBranch)}</span>
-            <IconChevronDownOutline14 size={12} className={css.chevron} />
+            <IconChevronDownOutlineRegular size={12} className={css.chevron} />
           </button>
         </span>,
         portalHost,
