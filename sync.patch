@@ -1,5 +1,5 @@
 diff --git a/README.md b/README.md
-index 3bcf177..49e44c6 100644
+index 653535d..e568345 100644
 --- a/README.md
 +++ b/README.md
 @@ -1,3 +1,15 @@
@@ -19,7 +19,7 @@ index 3bcf177..49e44c6 100644
  
  [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 diff --git a/README.zh.md b/README.zh.md
-index 5638752..b1a4db9 100644
+index 9319c1a..f6aba40 100644
 --- a/README.zh.md
 +++ b/README.zh.md
 @@ -1,3 +1,15 @@
@@ -39,16 +39,18 @@ index 5638752..b1a4db9 100644
  
  [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 diff --git a/pnpm-workspace.yaml b/pnpm-workspace.yaml
-index d76aa1e..3f83195 100644
+index c42533e..25d2886 100644
 --- a/pnpm-workspace.yaml
 +++ b/pnpm-workspace.yaml
-@@ -1,3 +1,4 @@
+@@ -1,5 +1,6 @@
  allowBuilds:
    esbuild: true
 +
  autoInstallPeers: false
+ minimumReleaseAgeExclude:
+   - '@deepseek-ai/cordis-plugin-loader@1.0.4'
 diff --git a/src/client/BranchChip.module.css b/src/client/BranchChip.module.css
-index c89c91e..827f794 100644
+index ef8a8ed..40de3a5 100644
 --- a/src/client/BranchChip.module.css
 +++ b/src/client/BranchChip.module.css
 @@ -17,14 +17,15 @@
@@ -116,16 +118,16 @@ index c89c91e..827f794 100644
 +
  /* Confirm flyout: the second-level panel opening right of the branch
   * card (the base Menu's submenu posture: r20, elevation-prominent
-  * hairline, --dsw-specific-menu — host 0.1.2 Menu card; hosts without
+  * hairline, --dsw-specific-menu with --dsw-menu-backdrop-filter — host 0.1.2 Menu card;
 diff --git a/src/client/BranchChip.tsx b/src/client/BranchChip.tsx
-index 0d39a95..8e576c9 100644
+index 22604e6..8e576c9 100644
 --- a/src/client/BranchChip.tsx
 +++ b/src/client/BranchChip.tsx
 @@ -63,7 +63,7 @@
  import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
  import { createPortal } from 'react-dom'
  import {
--  Button, IconBranchOutline16, Toast,
+-  Button, IconBranchOutlineRegular, Toast,
 +  Button, IconBranchOutline16, IconChevronDownOutline14, Toast,
  } from '@deepseek-ai/dsh-client-ui-primitives'
  import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
@@ -143,7 +145,79 @@ index 0d39a95..8e576c9 100644
  
  /**
   * Clamp a branch name for chip display: names up to 25 chars pass through;
-@@ -303,10 +303,10 @@ function ChipConfirm({
+@@ -181,12 +181,11 @@ function displayBranch(branch: string): string {
+  * {@link buildLinkedWorktreeRows}), so nothing here ever has to express
+  * "not usable in this directory".
+  */
+-export function buildBranchRows(
++function buildBranchRows(
+   branches: readonly BranchEntry[],
+   worktrees: readonly WorktreeEntry[],
+ ): BranchRow[] {
+   const held = new Set(worktrees.flatMap(w => w.main || w.branch === undefined ? [] : [w.branch]))
+-  const localMap = new Map(branches.filter(b => b.kind === 'local').map(b => [b.name, b]))
+   return [
+     ...branches.filter(b => b.kind === 'local' && !held.has(b.name)).map(b => ({
+       name: b.name,
+@@ -198,17 +197,9 @@ export function buildBranchRows(
+       name: b.name,
+       kind: 'remote' as const,
+     })),
+-    ...worktrees.flatMap(w => {
+-      if (w.main || w.branch === undefined) return []
+-      const twin = localMap.get(w.branch)
+-      return [{
+-        name: w.branch,
+-        kind: 'worktree' as const,
+-        path: w.path,
+-        ...twin?.ahead === undefined ? {} : { ahead: twin.ahead },
+-        ...twin?.behind === undefined ? {} : { behind: twin.behind },
+-      }]
+-    }),
++    ...worktrees.flatMap(w => w.main || w.branch === undefined
++      ? []
++      : [{ name: w.branch, kind: 'worktree' as const, path: w.path }]),
+   ]
+ }
+ 
+@@ -236,13 +227,12 @@ export function buildBranchRows(
+  * identity is its branch, so those rows could only ever be offered as
+  * refusals (see the component doc).
+  */
+-export function buildLinkedWorktreeRows(
++function buildLinkedWorktreeRows(
+   branches: readonly BranchEntry[],
+   worktrees: readonly WorktreeEntry[],
+   currentBranch: string,
+ ): BranchRow[] {
+   const current = branches.find(b => b.kind === 'local' && b.name === currentBranch)
+-  const localMap = new Map(branches.filter(b => b.kind === 'local').map(b => [b.name, b]))
+   return [
+     ...current === undefined
+       ? []
+@@ -256,18 +246,9 @@ export function buildLinkedWorktreeRows(
+     // Its row carries `mainWorktree` — the hop is legal, but git refuses
+     // `worktree remove` on the main checkout, so the destructive menu verb
+     // gates off this flag.
+-    ...worktrees.flatMap(w => {
+-      if (w.branch === undefined || w.branch === currentBranch) return []
+-      const twin = localMap.get(w.branch)
+-      return [{
+-        name: w.branch,
+-        kind: 'worktree' as const,
+-        path: w.path,
+-        ...(w.main ? { mainWorktree: true } : {}),
+-        ...twin?.ahead === undefined ? {} : { ahead: twin.ahead },
+-        ...twin?.behind === undefined ? {} : { behind: twin.behind },
+-      }]
+-    }),
++    ...worktrees.flatMap(w => w.branch === undefined || w.branch === currentBranch
++      ? []
++      : [{ name: w.branch, kind: 'worktree' as const, path: w.path, ...(w.main ? { mainWorktree: true } : {}) }]),
+   ]
+ }
+ 
+@@ -322,10 +303,10 @@ function ChipConfirm({
    const popRef = useRef<HTMLDivElement>(null)
    const confirmRef = useRef<HTMLButtonElement | null>(null)
    const draftInputRef = useRef<HTMLInputElement | null>(null)
@@ -157,7 +231,7 @@ index 0d39a95..8e576c9 100644
    useLayoutEffect(() => {
      const place = (): void => {
        const anchor = anchorRef.current
-@@ -314,9 +314,8 @@ function ChipConfirm({
+@@ -333,9 +314,8 @@ function ChipConfirm({
        if (anchor === null || pop === null) return
        const rect = anchor.getBoundingClientRect()
        const vw = window.innerWidth
@@ -168,7 +242,7 @@ index 0d39a95..8e576c9 100644
      }
      place()
      window.addEventListener('resize', place)
-@@ -403,8 +402,29 @@ function ChipConfirm({
+@@ -422,8 +402,29 @@ function ChipConfirm({
    )
  }
  
@@ -198,7 +272,7 @@ index 0d39a95..8e576c9 100644
    const summary = useSessions(state => state.byId[sessionId])
    const session = useSession(s => s)
    const cwd = summary?.cwd
-@@ -830,27 +850,32 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
+@@ -849,27 +850,32 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
  
    return (
      <>
@@ -219,7 +293,7 @@ index 0d39a95..8e576c9 100644
 -            if (opening && !busyRef.current) void refresh()
 -          }}
 -        >
--          <IconBranchOutline16 size={12} />
+-          <IconBranchOutlineRegular size={12} />
 -          <span className={css.branch}>{displayBranch(facts.currentBranch)}</span>
 -        </button>
 -      </span>
@@ -253,10 +327,10 @@ index 0d39a95..8e576c9 100644
          open={menuOpen}
          anchorRef={chipRef}
 diff --git a/src/client/BranchMenu.tsx b/src/client/BranchMenu.tsx
-index b7dbdc8..bdef8a0 100644
+index c939d93..e236fbd 100644
 --- a/src/client/BranchMenu.tsx
 +++ b/src/client/BranchMenu.tsx
-@@ -291,8 +291,8 @@ function FetchGlyph({ size = 16, dashed = true }: { size?: number; dashed?: bool
+@@ -292,8 +292,8 @@ function FetchGlyph({ size = 16, dashed = true }: { size?: number; dashed?: bool
  
  /** Viewport edge clearance, mirroring the base Menu portal margin. */
  const MARGIN = 12
@@ -267,7 +341,7 @@ index b7dbdc8..bdef8a0 100644
  /** Design card width — the CSS width's px arm; used for horizontal clamping. */
  const CARD_WIDTH = 360
  /** Design flyout width cap — matches .popCard's max-width arm. */
-@@ -457,11 +457,8 @@ export function BranchMenu({
+@@ -458,11 +458,8 @@ export function BranchMenu({
    const flyInputRef = useRef<HTMLInputElement | null>(null)
    /** The row whose pick is awaiting confirmation (anchoring element). */
    const pendingRef = useRef<{ name: string; el: HTMLElement } | null>(null)
@@ -280,7 +354,7 @@ index b7dbdc8..bdef8a0 100644
    const [query, setQuery] = useState('')
    /** Expanded folder set, keyed by group-prefixed node path (see groupKey).
     * Re-seeded on every open so the current branch's chain is visible
-@@ -694,10 +691,8 @@ export function BranchMenu({
+@@ -715,10 +712,8 @@ export function BranchMenu({
      })
    }
  
@@ -293,7 +367,7 @@ index b7dbdc8..bdef8a0 100644
    useLayoutEffect(() => {
      if (!open) {
        setPos(null)
-@@ -711,7 +706,9 @@ export function BranchMenu({
+@@ -732,7 +727,9 @@ export function BranchMenu({
        const vw = window.innerWidth
        const vh = window.innerHeight
        const left = Math.min(Math.max(rect.left, MARGIN), Math.max(MARGIN, vw - CARD_WIDTH - MARGIN))
@@ -304,7 +378,7 @@ index b7dbdc8..bdef8a0 100644
      }
      place()
      window.addEventListener('resize', place)
-@@ -1595,7 +1592,11 @@ export function BranchMenu({
+@@ -1655,7 +1652,11 @@ export function BranchMenu({
          <div
            ref={cardRef}
            className={css.menuCard}
