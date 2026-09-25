@@ -120,7 +120,7 @@ index ef8a8ed..40de3a5 100644
   * card (the base Menu's submenu posture: r20, elevation-prominent
   * hairline, --dsw-specific-menu with --dsw-menu-backdrop-filter — host 0.1.2 Menu card;
 diff --git a/src/client/BranchChip.tsx b/src/client/BranchChip.tsx
-index 22604e6..8e576c9 100644
+index 22604e6..0c58f6d 100644
 --- a/src/client/BranchChip.tsx
 +++ b/src/client/BranchChip.tsx
 @@ -63,7 +63,7 @@
@@ -128,7 +128,7 @@ index 22604e6..8e576c9 100644
  import { createPortal } from 'react-dom'
  import {
 -  Button, IconBranchOutlineRegular, Toast,
-+  Button, IconBranchOutline16, IconChevronDownOutline14, Toast,
++  Button, IconBranchOutlineRegular, IconChevronDownOutlineRegular, Toast,
  } from '@deepseek-ai/dsh-client-ui-primitives'
  import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
  // Type-only: merges SessionStandardProps / GlobalStandardProps (`sessionId`,
@@ -145,79 +145,7 @@ index 22604e6..8e576c9 100644
  
  /**
   * Clamp a branch name for chip display: names up to 25 chars pass through;
-@@ -181,12 +181,11 @@ function displayBranch(branch: string): string {
-  * {@link buildLinkedWorktreeRows}), so nothing here ever has to express
-  * "not usable in this directory".
-  */
--export function buildBranchRows(
-+function buildBranchRows(
-   branches: readonly BranchEntry[],
-   worktrees: readonly WorktreeEntry[],
- ): BranchRow[] {
-   const held = new Set(worktrees.flatMap(w => w.main || w.branch === undefined ? [] : [w.branch]))
--  const localMap = new Map(branches.filter(b => b.kind === 'local').map(b => [b.name, b]))
-   return [
-     ...branches.filter(b => b.kind === 'local' && !held.has(b.name)).map(b => ({
-       name: b.name,
-@@ -198,17 +197,9 @@ export function buildBranchRows(
-       name: b.name,
-       kind: 'remote' as const,
-     })),
--    ...worktrees.flatMap(w => {
--      if (w.main || w.branch === undefined) return []
--      const twin = localMap.get(w.branch)
--      return [{
--        name: w.branch,
--        kind: 'worktree' as const,
--        path: w.path,
--        ...twin?.ahead === undefined ? {} : { ahead: twin.ahead },
--        ...twin?.behind === undefined ? {} : { behind: twin.behind },
--      }]
--    }),
-+    ...worktrees.flatMap(w => w.main || w.branch === undefined
-+      ? []
-+      : [{ name: w.branch, kind: 'worktree' as const, path: w.path }]),
-   ]
- }
- 
-@@ -236,13 +227,12 @@ export function buildBranchRows(
-  * identity is its branch, so those rows could only ever be offered as
-  * refusals (see the component doc).
-  */
--export function buildLinkedWorktreeRows(
-+function buildLinkedWorktreeRows(
-   branches: readonly BranchEntry[],
-   worktrees: readonly WorktreeEntry[],
-   currentBranch: string,
- ): BranchRow[] {
-   const current = branches.find(b => b.kind === 'local' && b.name === currentBranch)
--  const localMap = new Map(branches.filter(b => b.kind === 'local').map(b => [b.name, b]))
-   return [
-     ...current === undefined
-       ? []
-@@ -256,18 +246,9 @@ export function buildLinkedWorktreeRows(
-     // Its row carries `mainWorktree` — the hop is legal, but git refuses
-     // `worktree remove` on the main checkout, so the destructive menu verb
-     // gates off this flag.
--    ...worktrees.flatMap(w => {
--      if (w.branch === undefined || w.branch === currentBranch) return []
--      const twin = localMap.get(w.branch)
--      return [{
--        name: w.branch,
--        kind: 'worktree' as const,
--        path: w.path,
--        ...(w.main ? { mainWorktree: true } : {}),
--        ...twin?.ahead === undefined ? {} : { ahead: twin.ahead },
--        ...twin?.behind === undefined ? {} : { behind: twin.behind },
--      }]
--    }),
-+    ...worktrees.flatMap(w => w.branch === undefined || w.branch === currentBranch
-+      ? []
-+      : [{ name: w.branch, kind: 'worktree' as const, path: w.path, ...(w.main ? { mainWorktree: true } : {}) }]),
-   ]
- }
- 
-@@ -322,10 +303,10 @@ function ChipConfirm({
+@@ -322,10 +322,10 @@ function ChipConfirm({
    const popRef = useRef<HTMLDivElement>(null)
    const confirmRef = useRef<HTMLButtonElement | null>(null)
    const draftInputRef = useRef<HTMLInputElement | null>(null)
@@ -231,7 +159,7 @@ index 22604e6..8e576c9 100644
    useLayoutEffect(() => {
      const place = (): void => {
        const anchor = anchorRef.current
-@@ -333,9 +314,8 @@ function ChipConfirm({
+@@ -333,9 +333,8 @@ function ChipConfirm({
        if (anchor === null || pop === null) return
        const rect = anchor.getBoundingClientRect()
        const vw = window.innerWidth
@@ -242,7 +170,7 @@ index 22604e6..8e576c9 100644
      }
      place()
      window.addEventListener('resize', place)
-@@ -422,8 +402,29 @@ function ChipConfirm({
+@@ -422,8 +421,29 @@ function ChipConfirm({
    )
  }
  
@@ -272,7 +200,7 @@ index 22604e6..8e576c9 100644
    const summary = useSessions(state => state.byId[sessionId])
    const session = useSession(s => s)
    const cwd = summary?.cwd
-@@ -849,27 +850,32 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
+@@ -849,27 +869,32 @@ export function BranchChipDock({ sessionId, useSessions, useSession, adoptWorktr
  
    return (
      <>
@@ -316,9 +244,9 @@ index 22604e6..8e576c9 100644
 +              if (opening && !busyRef.current) void refresh()
 +            }}
 +          >
-+            <IconBranchOutline16 size={12} className={css.branchIcon} />
++            <IconBranchOutlineRegular size={12} className={css.branchIcon} />
 +            <span className={css.branch}>{displayBranch(facts.currentBranch)}</span>
-+            <IconChevronDownOutline14 size={12} className={css.chevron} />
++            <IconChevronDownOutlineRegular size={12} className={css.chevron} />
 +          </button>
 +        </span>,
 +        portalHost,
