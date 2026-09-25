@@ -14,7 +14,7 @@
 
 [![Awesome DSH Plugin](https://awesome-dsh-plugin.com/badge.svg)](https://awesome-dsh-plugin.com)
 
-![dsh-git-worktree in the Web UI](gitworktree.png)
+![dsh-git-worktree in the Web UI](docs/images/gitworktree.png)
 
 [简体中文](./README.zh.md) | English
 
@@ -88,14 +88,14 @@ Worktree folders are kept at both locations (the per-repository `.dsh/gitworktre
 Build once, install a symlink, iterate:
 
 ```sh
-npm install
-npm run build && npm run build:client
-npm test                # vitest
+pnpm install
+pnpm build:all
+pnpm test                # vitest
 node scripts/smoke.mjs  # real-git smoke over the built lib
 dsh plugin --profile web add link:D:/Code/dsh-worktree
 ```
 
-Rebuild and restart `dsh web` to apply changes (`npx tsdown --watch` in the plugin directory hot-reloads the client). No `prepare` script by design — `lib/` never enters the repo; `npm publish` builds it fresh into the tarball.
+Rebuild and restart `dsh web` to apply changes (`pnpm watch:client` in the plugin directory hot-reloads the client). No `prepare` script by design — `lib/` never enters the repo; `pnpm publish` builds it fresh into the tarball.
 
 Temporary host-only mount (this launch only, no profile changes): create a `cordis.yml` next to the repo pointing at the built host half (Windows needs the `file:///` form), then launch with it:
 
