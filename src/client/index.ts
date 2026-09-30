@@ -86,6 +86,20 @@ export const inject = ['slots', 'sessions', 'workspaces', 'uiWorkspace', 'locale
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'git-worktree: dictionaries')
 
+  const configForms = ((): any => {
+    if ((ctx as any).reflect?.get && typeof (ctx as any).reflect.get === 'function') {
+      return (ctx as any).reflect.get('configForms')
+    }
+    try {
+      return (ctx as any).configForms
+    } catch {
+      return undefined
+    }
+  })()
+  const groupingForm: any = configForms && typeof configForms.get === 'function'
+    ? configForms.get(GIT_WORKTREE_NS)
+    : undefined
+
   /** The DSH half of one worktree removal, read from the live snapshots: the
    * workspace registration sitting on the directory, whether any of its
    * sessions is running (the verb withholds), and the archive set —
@@ -151,6 +165,7 @@ export function apply(ctx: ClientContext): void {
     // updatedAt — running-session directories, the fresh creation, and the
     // current session's directory are excluded from selection outright.
     pruneWorktrees: async (createdPath) => {
+      if (!groupingForm || typeof groupingForm.getSnapshot !== 'function') return undefined
       const section = groupingForm.getSnapshot()
       if (section.status !== 'ready') return undefined
       if ((section.value?.autoPruneWorktrees ?? false) !== true) return undefined
@@ -314,18 +329,7 @@ export function apply(ctx: ClientContext): void {
     deleteWorkspace: (workspaceId) => ctx.workspaces.delete(workspaceId as WorkspaceId),
   })
 
-  const configForms = ((): any => {
-    if ((ctx as any).reflect?.get && typeof (ctx as any).reflect.get === 'function') {
-      return (ctx as any).reflect.get('configForms')
-    }
-    try {
-      return (ctx as any).configForms
-    } catch {
-      return undefined
-    }
-  })()
-  if (configForms && typeof configForms.get === 'function' && typeof configForms.describe === 'function') {
-    const groupingForm = configForms.get(GIT_WORKTREE_NS)
+  if (configForms && groupingForm && typeof configForms.describe === 'function') {
     const form = new CardForm(groupingForm)
     const store = form.bind()
     const describeFace = configForms.describe()

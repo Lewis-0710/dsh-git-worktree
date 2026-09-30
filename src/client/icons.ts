@@ -1,7 +1,7 @@
 import * as Primitives from '@deepseek-ai/dsh-client-ui-primitives'
 import type { ComponentType } from 'react'
 
-type IconProps = { size?: number; className?: string; [key: string]: any }
+type IconProps = { size?: number | undefined; className?: string | undefined; [key: string]: any }
 type IconComponent = ComponentType<IconProps>
 
 const P = Primitives as Record<string, any>
