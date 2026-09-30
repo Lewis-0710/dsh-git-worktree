@@ -18,7 +18,8 @@
  */
 
 import { useEffect, useMemo, useState } from 'react'
-import { Button, IconFolderCloseRegular, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { Button, Modal } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconFolderCloseRegular } from './icons.ts'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import type { WorktreeScanEntry } from '../wire.ts'
 import { timeLabel } from './relative-time.ts'

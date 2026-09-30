@@ -94,6 +94,10 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import {
+  Toast,
+  writeClipboard,
+} from '@deepseek-ai/dsh-client-ui-primitives'
+import {
   IconBranchOutlineRegular,
   IconCheckOutlineRegular,
   IconChevronDownOutlineRegular,
@@ -106,9 +110,7 @@ import {
   IconProjectAddOutlineRegular,
   IconRightUpOutlineRegular,
   IconTrashOutlineRegular,
-  Toast,
-  writeClipboard,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from './icons.ts'
 import type { PropsLocale } from '@deepseek-ai/dsh-client-ui-slots'
 import { branchNameIssue } from '../normalize.ts'
 import {

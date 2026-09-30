@@ -81,12 +81,10 @@ const PLUGIN_PACKAGE = '@laoyuehanni/dsh-git-worktree'
 /** Required services: the slot ledger, session/workspace runtimes, the
  * workspace navigation/directory face, copy, and the config forms backing
  * the plugin configuration card. */
-export const inject = ['slots', 'sessions', 'workspaces', 'uiWorkspace', 'locale', 'connection', 'remote', 'configForms']
+export const inject = ['slots', 'sessions', 'workspaces', 'uiWorkspace', 'locale', 'connection', 'remote']
 
 export function apply(ctx: ClientContext): void {
   ctx.effect(() => ctx.locale.register(NS, { zh, en }), 'git-worktree: dictionaries')
-
-  const groupingForm = ctx.configForms.get<SectionValue>(GIT_WORKTREE_NS)
 
   /** The DSH half of one worktree removal, read from the live snapshots: the
    * workspace registration sitting on the directory, whether any of its
@@ -316,42 +314,48 @@ export function apply(ctx: ClientContext): void {
     deleteWorkspace: (workspaceId) => ctx.workspaces.delete(workspaceId as WorkspaceId),
   })
 
-  const form = new CardForm(groupingForm)
-  const store = form.bind()
-  // The Plugins page dispatches a bundle's own configuration by the bundle's
-  // PACKAGE NAME (this package — see cordis.patch.yml), rendered on the
-  // bundle's page under `view: 'page'` and previewed under 'summary'. The
-  // registration follows the served-namespace directory through the shared
-  // describe face: a deployment whose Host half is not composed (the
-  // `git-worktree` namespace unserved) shows no trace of the card, and a
-  // late-arriving Host registration still picks it up.
-  const describeFace = ctx.configForms.describe()
-  let configDisposer: (() => void) | undefined
-  const syncCardSeat = (): void => {
-    const snapshot = describeFace.getSnapshot()
-    const served = snapshot.status === 'ready'
-      && (snapshot.view?.namespaces.some(entry => entry.ns === GIT_WORKTREE_NS) ?? false)
-    if (served && configDisposer === undefined) {
-      configDisposer = ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({
-        name: 'plugins.bundle.config',
-        key: PLUGIN_PACKAGE,
-        locale: NS,
-        inject: () => ({
-          hooks: { gitWorktreeCard: store },
-          ...form.actions(),
-          manager: managerFace(),
-        }),
-      }, GitWorktreeCard))
-    } else if (!served && configDisposer !== undefined) {
-      configDisposer()
-      configDisposer = undefined
+  const configForms = ((): any => {
+    if ((ctx as any).reflect?.get && typeof (ctx as any).reflect.get === 'function') {
+      return (ctx as any).reflect.get('configForms')
     }
+    try {
+      return (ctx as any).configForms
+    } catch {
+      return undefined
+    }
+  })()
+  if (configForms && typeof configForms.get === 'function' && typeof configForms.describe === 'function') {
+    const groupingForm = configForms.get(GIT_WORKTREE_NS)
+    const form = new CardForm(groupingForm)
+    const store = form.bind()
+    const describeFace = configForms.describe()
+    let configDisposer: (() => void) | undefined
+    const syncCardSeat = (): void => {
+      const snapshot = describeFace.getSnapshot()
+      const served = snapshot.status === 'ready'
+        && (snapshot.view?.namespaces.some((entry: any) => entry.ns === GIT_WORKTREE_NS) ?? false)
+      if (served && configDisposer === undefined) {
+        configDisposer = ctx.slots.inject('plugins.bundle.config', () => ctx.slots.register({
+          name: 'plugins.bundle.config',
+          key: PLUGIN_PACKAGE,
+          locale: NS,
+          inject: () => ({
+            hooks: { gitWorktreeCard: store },
+            ...form.actions(),
+            manager: managerFace(),
+          }),
+        }, GitWorktreeCard))
+      } else if (!served && configDisposer !== undefined) {
+        configDisposer()
+        configDisposer = undefined
+      }
+    }
+    const unsubscribeDescribe = describeFace.subscribe(syncCardSeat)
+    void describeFace.ensure()
+    syncCardSeat()
+    ctx.effect(() => () => {
+      unsubscribeDescribe()
+      if (configDisposer !== undefined) configDisposer()
+    }, 'git-worktree: plugin config card lifecycle')
   }
-  const unsubscribeDescribe = describeFace.subscribe(syncCardSeat)
-  void describeFace.ensure()
-  syncCardSeat()
-  ctx.effect(() => () => {
-    unsubscribeDescribe()
-    if (configDisposer !== undefined) configDisposer()
-  }, 'git-worktree: plugin config card lifecycle')
 }

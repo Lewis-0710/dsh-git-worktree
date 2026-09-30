@@ -63,8 +63,9 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
 import {
-  Button, IconBranchOutlineRegular, IconChevronDownOutlineRegular, Toast,
+  Button, Toast,
 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconBranchOutlineRegular, IconChevronDownOutlineRegular } from './icons.ts'
 import type { PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 // Type-only: merges SessionStandardProps / GlobalStandardProps (`sessionId`,
 // `useSessions`) into the input-left runtime kit.

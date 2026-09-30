@@ -185,7 +185,9 @@ export function apply(ctx: Context, config: Config = {}): void {
   // We configure auto: false to inform the host that this plugin provides its own
   // dedicated configuration card (via `plugins.bundle.config`).
   ctx.inject(['settings'], (settingsCtx) => {
-    settingsCtx.effect(() => settingsCtx.settings.configure({ auto: false }, ctx.fiber), 'git-worktree: settings presentation policy')
+    if (typeof (settingsCtx.settings as any)?.configure === 'function') {
+      settingsCtx.effect(() => (settingsCtx.settings as any).configure({ auto: false }, ctx.fiber), 'git-worktree: settings presentation policy')
+    }
   })
 
   ctx.inject(['webServer'], (webCtx) => {
